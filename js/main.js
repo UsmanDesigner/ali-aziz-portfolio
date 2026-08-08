@@ -441,20 +441,76 @@
         '&body=' + encodeURIComponent(d.body);
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var d = collect();
-      if (!d) return;
+    var keyField = $('#cf-key');
+    var submitBtn = $('#cf-submit');
+    var accessKey = keyField ? keyField.value.trim() : '';
+    var keyReady  = accessKey && accessKey.indexOf('PASTE-YOUR') !== 0;
 
+    function busy(on) {
+      if (!submitBtn) return;
+      submitBtn.classList.toggle('loading', on);
+      submitBtn.disabled = on;
+      var label = $('.btn-label', submitBtn);
+      if (label) label.textContent = on ? 'Sending…' : 'Send message';
+    }
+
+    // Preferred path: POST to the form backend so the message lands in Ali's
+    // inbox directly — no mail app, no compose tab. Works the same on mobile.
+    function send(d) {
+      busy(true);
+      say('Sending…');
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: accessKey,
+          from_name: 'Ali Aziz Portfolio',
+          name: $('#cf-name').value.trim(),
+          email: $('#cf-email').value.trim(),
+          replyto: $('#cf-email').value.trim(),
+          subject: d.subject,
+          message: d.body
+        })
+      })
+        .then(function (res) { return res.json().catch(function () { return {}; }); })
+        .then(function (json) {
+          busy(false);
+          if (json && json.success) {
+            form.reset();
+            say('Message sent — Ali will get it in his inbox. Thank you!', 'ok');
+          } else {
+            say((json && json.message) || 'Could not send just now. Please email dr.aliaziz145@gmail.com directly.', 'err');
+          }
+        })
+        .catch(function () {
+          busy(false);
+          say('Network problem — please email dr.aliaziz145@gmail.com directly.', 'err');
+        });
+    }
+
+    // Fallback while no access key is configured: hand off to Gmail / the mail app.
+    function handOff(d) {
       var win = window.open(gmailUrl(d), '_blank', 'noopener,noreferrer');
       if (win) {
         say('Gmail is opening in a new tab — press Send there to deliver it.', 'ok');
       } else {
-        // Popup blocked: fall back to whatever mail client the OS has registered.
         window.location.href = mailtoUrl(d);
-        say('Pop-up blocked, so we handed the message to your default mail app instead.', 'err');
+        say('Opening your default mail app…', 'err');
       }
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var d = collect();
+      if (!d) return;
+      if (keyReady) send(d); else handOff(d);
     });
+
+    // Don't promise direct delivery the page can't do yet.
+    if (!keyReady) {
+      say('Opens a pre-filled message in your own email app or Gmail.');
+    }
 
     var mailAppBtn = $('#useMailApp');
     if (mailAppBtn) {

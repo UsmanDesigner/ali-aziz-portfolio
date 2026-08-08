@@ -780,7 +780,17 @@
           </a>
         </div>
 
-        <form class="contact-form reveal" data-delay="2" id="contactForm" novalidate>
+        <form class="contact-form reveal" data-delay="2" id="contactForm"
+              action="https://api.web3forms.com/submit" method="POST" novalidate>
+
+          <!-- Get a free key at https://web3forms.com — enter dr.aliaziz145@gmail.com,
+               they email the key instantly. Paste it below. Nothing else to change. -->
+          <input type="hidden" name="access_key" id="cf-key" value="PASTE-YOUR-WEB3FORMS-ACCESS-KEY-HERE" />
+          <input type="hidden" name="from_name" value="Ali Aziz Portfolio" />
+
+          <!-- honeypot: bots tick it, people never see it -->
+          <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
           <div class="field">
             <label for="cf-name">Your name</label>
             <input type="text" id="cf-name" name="name" required placeholder="Jane Doe" autocomplete="name" />
@@ -797,14 +807,16 @@
             <label for="cf-message">Message</label>
             <textarea id="cf-message" name="message" rows="5" required placeholder="Tell me about the role or the audit you need support with…"></textarea>
           </div>
-          <button class="btn btn-primary btn-block" type="submit">
-            <svg class="ico"><use href="#i-send"/></svg> Send via Gmail
+          <button class="btn btn-primary btn-block" id="cf-submit" type="submit">
+            <span class="btn-spin" aria-hidden="true"></span>
+            <svg class="ico"><use href="#i-send"/></svg>
+            <span class="btn-label">Send message</span>
           </button>
           <p class="form-note" id="formNote" role="status">
-            Opens a pre-filled Gmail compose window in your own account, addressed to Ali.
+            Delivered straight to Ali's inbox. Nothing opens, nothing is stored here.
           </p>
           <p class="form-alt">
-            No Gmail? <button type="button" class="link-btn" id="useMailApp">Use your default mail app</button>
+            <button type="button" class="link-btn" id="useMailApp">Write from your own mail app</button>
             <span aria-hidden="true">·</span>
             <button type="button" class="link-btn" id="copyEmail">Copy his address</button>
           </p>

@@ -903,6 +903,29 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 }
 .link-btn:hover { color: var(--brand); text-decoration-color: var(--brand); }
 
+/* honeypot — kept out of sight and out of the tab order, never display:none
+   (some bots skip fields that are display:none) */
+.hp {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* submit button loading state */
+.btn-spin {
+  display: none;
+  width: 16px; height: 16px; flex: none;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.btn.loading .btn-spin { display: block; }
+.btn.loading .ico { display: none; }
+.btn:disabled { opacity: .72; cursor: progress; transform: none; }
+
 /* ============ 7. COMPONENTS ============ */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .55rem;

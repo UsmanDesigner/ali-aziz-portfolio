@@ -40,27 +40,50 @@ Education, training & certificates · Contact
   `role="progressbar"` on skill meters, and full `prefers-reduced-motion` support (canvas and
   typing disabled, transitions collapsed).
 - **Print stylesheet** — chrome and decoration stripped so the page prints as a clean CV.
-- **Contact form** — validates client-side, then opens a pre-filled **Gmail compose window** in the
-  visitor's own account addressed to `dr.aliaziz145@gmail.com`. Falls back to `mailto:` if the
-  pop-up is blocked, with manual "use my mail app" and "copy address" options underneath.
+- **Contact form** — AJAX POST to a form backend, delivered straight to Ali's inbox. Nothing opens,
+  no page reload, works identically on mobile. Honeypot field for spam, loading state on the button.
 
-## How the contact form sends mail
+## ⚠️ One setup step: the contact form access key
 
-A static page has no server, so it cannot send email by itself. Submitting opens Gmail's compose
-endpoint in a new tab:
+The form needs a free [Web3Forms](https://web3forms.com) key before it can deliver mail. Until then
+it silently falls back to opening the visitor's Gmail/mail app, and the helper text under the button
+changes to match — so the page is never broken, just not yet sending directly.
 
-```
-https://mail.google.com/mail/?view=cm&fs=1&to=…&su=…&body=…
-```
+**To turn on direct sending (about two minutes, no account needed):**
 
-The visitor is signed into their own Gmail, the message is pre-filled and addressed to Ali, and
-they press **Send**. Mail therefore leaves the visitor's own account — which also means it never
-lands in spam and Ali can reply directly.
+1. Go to **https://web3forms.com**
+2. Enter **`dr.aliaziz145@gmail.com`** in the "Create Access Key" box and submit.
+3. Web3Forms emails that address an access key — a UUID like
+   `a1b2c3d4-5678-90ab-cdef-1234567890ab`. Ali must open the email to confirm.
+4. In `index.html`, find this line (search for `cf-key`) and replace the placeholder:
 
-**If you want true one-click sending** (no compose window), the page needs a form backend. Drop in
-a free service and change one line — e.g. [Web3Forms](https://web3forms.com) or
-[Formspree](https://formspree.io): set `action` on the `<form>` and remove the submit handler in
-`contactForm()`. Both deliver straight to Ali's inbox without the visitor seeing a compose screen.
+   ```html
+   <input type="hidden" name="access_key" id="cf-key" value="PASTE-YOUR-WEB3FORMS-ACCESS-KEY-HERE" />
+   ```
+
+That's the only edit. The JS reads the key from that input, so there is nothing to change in
+`js/main.js`.
+
+### Is the key safe in public HTML?
+
+Yes — Web3Forms access keys are designed to sit in client-side markup. The key only lets a sender
+post a message to the one address it was issued for; it exposes no inbox access and no data.
+
+### How it behaves
+
+| Situation | What happens |
+|---|---|
+| Key set, submit pressed | Button shows a spinner, `fetch` POSTs JSON to `api.web3forms.com/submit`, form clears, green "Message sent" confirmation |
+| Backend returns an error | Red message with Ali's address so the visitor can still reach him |
+| Network offline | Same red fallback message |
+| Key not set yet | Falls back to Gmail compose / `mailto:` |
+| JS disabled entirely | The `<form>` still has a real `action` and `method="POST"`, so it submits natively |
+
+The two links under the button — "Write from your own mail app" and "Copy his address" — remain as
+manual escape hatches in every case.
+
+**Free tier:** 250 submissions/month. [Formspree](https://formspree.io) is a drop-in alternative if
+you'd rather use it — swap the `action` URL and the field names.
 
 ## Content source
 
