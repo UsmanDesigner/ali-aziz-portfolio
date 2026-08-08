@@ -1,0 +1,9 @@
+# Source CV kept locally — the published copy lives in assets/
+/M ALi AZIZ CV*.docx
+~$*.docx
+
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
