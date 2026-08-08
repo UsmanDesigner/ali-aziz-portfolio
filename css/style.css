@@ -926,6 +926,24 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 .btn.loading .ico { display: none; }
 .btn:disabled { opacity: .72; cursor: progress; transform: none; }
 
+/* toast */
+.toast {
+  position: fixed; z-index: 130;
+  left: 50%; bottom: clamp(1rem, 4vw, 2.2rem);
+  transform: translate(-50%, 18px);
+  max-width: min(92vw, 460px);
+  padding: .7rem 1.2rem;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-full);
+  background: var(--bg-2);
+  box-shadow: var(--shadow);
+  font-size: .82rem; text-align: center;
+  overflow-wrap: anywhere;
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--t-med), transform var(--t-med), visibility var(--t-med);
+}
+.toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+
 /* ============ 7. COMPONENTS ============ */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .55rem;

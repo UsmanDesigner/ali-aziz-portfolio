@@ -12,6 +12,75 @@
   var $  = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
 
+  var CONTACT_EMAIL = 'dr.aliaziz145@gmail.com';
+
+  /* ------------------------------------------------------- shared helpers */
+
+  // Small bottom-centre status bubble, used when there is no form note nearby.
+  var toast = (function () {
+    var el = null, timer = null;
+    return function (msg) {
+      el = el || $('#toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      window.clearTimeout(timer);
+      timer = window.setTimeout(function () { el.classList.remove('show'); }, 4500);
+    };
+  })();
+
+  // Gmail's compose endpoint — works in any browser, desktop or mobile, and
+  // never depends on an OS-registered mail handler.
+  function gmailComposeUrl(subject, body) {
+    return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(CONTACT_EMAIL) +
+      (subject ? '&su=' + encodeURIComponent(subject) : '') +
+      (body ? '&body=' + encodeURIComponent(body) : '');
+  }
+
+  function mailtoComposeUrl(subject, body) {
+    return 'mailto:' + CONTACT_EMAIL +
+      (subject ? '?subject=' + encodeURIComponent(subject) : '') +
+      (body ? (subject ? '&' : '?') + 'body=' + encodeURIComponent(body) : '');
+  }
+
+  function copyText(text, done) {
+    function legacy() {
+      var tmp = document.createElement('textarea');
+      tmp.value = text;
+      tmp.setAttribute('readonly', '');
+      tmp.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(tmp);
+      tmp.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(tmp);
+      done(ok);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, legacy);
+      return;
+    }
+    legacy();
+  }
+
+  /* ------------------------------------------------------- email links */
+  // A bare mailto: dead-ends on any machine with no mail client registered —
+  // which is most Windows installs, Chromebooks and mobile browsers. Route the
+  // address links through Gmail compose instead, and copy as a last resort.
+  (function emailLinks() {
+    $$('a[href^="mailto:"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var win = window.open(gmailComposeUrl('', ''), '_blank', 'noopener,noreferrer');
+        if (win) return;
+        copyText(CONTACT_EMAIL, function (ok) {
+          toast(ok ? 'Address copied: ' + CONTACT_EMAIL : CONTACT_EMAIL);
+        });
+      });
+    });
+  })();
+
   /* ---------------------------------------------------------------- theme */
   (function theme() {
     var btn = $('#themeToggle');
@@ -427,20 +496,6 @@
       };
     }
 
-    function mailtoUrl(d) {
-      return 'mailto:' + TO +
-        '?subject=' + encodeURIComponent(d.subject) +
-        '&body=' + encodeURIComponent(d.body);
-    }
-
-    // Gmail's compose endpoint — sends from the visitor's own signed-in account.
-    function gmailUrl(d) {
-      return 'https://mail.google.com/mail/?view=cm&fs=1' +
-        '&to=' + encodeURIComponent(TO) +
-        '&su=' + encodeURIComponent(d.subject) +
-        '&body=' + encodeURIComponent(d.body);
-    }
-
     var keyField = $('#cf-key');
     var submitBtn = $('#cf-submit');
     var accessKey = keyField ? keyField.value.trim() : '';
@@ -490,14 +545,19 @@
     }
 
     // Fallback while no access key is configured: hand off to Gmail / the mail app.
+    // Never auto-trigger mailto: here — on a machine with no registered mail
+    // client that only produces an OS "choose an app" dialog and a dead end.
     function handOff(d) {
-      var win = window.open(gmailUrl(d), '_blank', 'noopener,noreferrer');
+      var win = window.open(gmailComposeUrl(d.subject, d.body), '_blank', 'noopener,noreferrer');
       if (win) {
         say('Gmail is opening in a new tab — press Send there to deliver it.', 'ok');
-      } else {
-        window.location.href = mailtoUrl(d);
-        say('Opening your default mail app…', 'err');
+        return;
       }
+      copyText('To: ' + TO + '\nSubject: ' + d.subject + '\n\n' + d.body, function (ok) {
+        say(ok
+          ? 'Pop-up blocked — your message is copied to the clipboard. Paste it into an email to ' + TO + '.'
+          : 'Pop-up blocked. Please email ' + TO + ' directly.', 'err');
+      });
     }
 
     form.addEventListener('submit', function (e) {
@@ -512,34 +572,23 @@
       say('Opens a pre-filled message in your own email app or Gmail.');
     }
 
+    // The only place mailto: is still used — the visitor asked for it by name.
     var mailAppBtn = $('#useMailApp');
     if (mailAppBtn) {
       mailAppBtn.addEventListener('click', function () {
         var d = collect();
         if (!d) return;
-        window.location.href = mailtoUrl(d);
-        say('Opening your default mail app…', 'ok');
+        window.location.href = mailtoComposeUrl(d.subject, d.body);
+        say('Handing the message to your default mail app…', 'ok');
       });
     }
 
     var copyBtn = $('#copyEmail');
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
-        var done = function () { say('Copied ' + TO + ' to your clipboard.', 'ok'); };
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(TO).then(done, function () { say(TO, 'ok'); });
-          return;
-        }
-        // execCommand fallback for non-secure origins (opening the file directly).
-        var tmp = document.createElement('textarea');
-        tmp.value = TO;
-        tmp.setAttribute('readonly', '');
-        tmp.style.cssText = 'position:fixed;top:-1000px;opacity:0';
-        document.body.appendChild(tmp);
-        tmp.select();
-        try { document.execCommand('copy'); done(); } catch (err) { say(TO, 'ok'); }
-        document.body.removeChild(tmp);
+        copyText(TO, function (ok) {
+          say(ok ? 'Copied ' + TO + ' to your clipboard.' : TO, 'ok');
+        });
       });
     }
 
