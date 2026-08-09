@@ -232,103 +232,34 @@
     items.forEach(function (el) { io.observe(el); });
   })();
 
-  /* -------------------------------------------------------- count-up nums */
-  (function counters() {
-    var nums = $$('.count');
-    if (!nums.length) return;
+  /* ------------------------------------------------ company logo fallback */
+  // Each strip tile shows a monogram until a real logo file loads from
+  // assets/logos/. The markup asks for .png; if that 404s we try the other
+  // common formats before giving up, so the file just has to land in the
+  // folder under the right base name — the extension does not matter.
+  (function companyLogos() {
+    var EXTS = ['.png', '.svg', '.jpg', '.jpeg', '.webp'];
 
-    function run(el) {
-      var target = parseFloat(el.getAttribute('data-count')) || 0;
-      if (reduceMotion) { el.textContent = String(target); return; }
+    $$('.co-logo').forEach(function (img) {
+      var slot = img.parentNode;
+      var base = slot && slot.getAttribute('data-logo');
+      var next = 1;                                   // markup already tried EXTS[0]
 
-      var dur = 1400;
-      var start = null;
-      function step(ts) {
-        if (start === null) start = ts;
-        var p = Math.min((ts - start) / dur, 1);
-        var eased = 1 - Math.pow(1 - p, 3);          // easeOutCubic
-        el.textContent = String(Math.round(target * eased));
-        if (p < 1) window.requestAnimationFrame(step);
+      function done() {
+        if (slot) slot.classList.add('has-logo');
       }
-      window.requestAnimationFrame(step);
-    }
-
-    if (!('IntersectionObserver' in window)) { nums.forEach(run); return; }
-
-    var io = new IntersectionObserver(function (entries, obs) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        run(entry.target);
-        obs.unobserve(entry.target);
-      });
-    }, { threshold: 0.6 });
-
-    nums.forEach(function (el) { io.observe(el); });
-  })();
-
-  /* ----------------------------------------------------------- skill bars */
-  (function meters() {
-    var bars = $$('.meter');
-    if (!bars.length) return;
-
-    function fill(el) {
-      var v = Math.max(0, Math.min(100, parseFloat(el.getAttribute('data-value')) || 0));
-      var track = $('.meter-track', el);
-      var bar = $('.meter-fill', el);
-      if (track) {
-        track.setAttribute('role', 'progressbar');
-        track.setAttribute('aria-valuenow', String(v));
-        track.setAttribute('aria-valuemin', '0');
-        track.setAttribute('aria-valuemax', '100');
+      function fail() {
+        if (base && next < EXTS.length) { img.src = base + EXTS[next++]; return; }
+        img.remove();                                 // monogram stays visible
       }
-      if (bar) bar.style.width = v + '%';
-    }
+      function settle() {
+        if (img.naturalWidth) { done(); } else { fail(); }
+      }
 
-    if (!('IntersectionObserver' in window)) { bars.forEach(fill); return; }
-
-    var io = new IntersectionObserver(function (entries, obs) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        fill(entry.target);
-        obs.unobserve(entry.target);
-      });
-    }, { threshold: 0.35 });
-
-    bars.forEach(function (el) { io.observe(el); });
-  })();
-
-  /* ------------------------------------------------------ typing rotator */
-  (function typed() {
-    var el = $('#typed');
-    if (!el) return;
-
-    var lines = [
-      'Associate Manager — Quality Assurance (CMO)',
-      'Pharm-D · ISO 9001:2015 Lead Auditor',
-      'QMS · GMP Audits · CAPA · Risk Management'
-    ];
-
-    if (reduceMotion) {
-      el.textContent = lines[0];
-      var caret = $('.caret');
-      if (caret) caret.style.display = 'none';
-      return;
-    }
-
-    var i = 0, c = 0, deleting = false;
-
-    function tick() {
-      var line = lines[i];
-      c += deleting ? -1 : 1;
-      el.textContent = line.slice(0, c);
-
-      var delay = deleting ? 30 : 58;
-      if (!deleting && c === line.length) { deleting = true; delay = 2100; }
-      else if (deleting && c === 0) { deleting = false; i = (i + 1) % lines.length; delay = 320; }
-
-      window.setTimeout(tick, delay);
-    }
-    window.setTimeout(tick, 500);
+      if (img.complete) { settle(); return; }
+      img.addEventListener('load', done);
+      img.addEventListener('error', fail);
+    });
   })();
 
   /* ---------------------------------------------- hero molecular network */

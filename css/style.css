@@ -242,7 +242,9 @@ button { background: none; border: 0; cursor: pointer; }
 }
 .header-inner { display: flex; align-items: center; gap: 1rem; }
 
-.brand { display: flex; align-items: center; gap: .7rem; margin-right: auto; }
+/* min-width:0 so the brand can shrink instead of forcing the header
+   wider than a narrow phone screen */
+.brand { display: flex; align-items: center; gap: .7rem; margin-right: auto; min-width: 0; }
 .brand-mark {
   width: 38px; height: 38px; flex: none;
   border-radius: 50%;
@@ -253,8 +255,11 @@ button { background: none; border: 0; cursor: pointer; }
   transition: box-shadow var(--t-fast), transform var(--t-fast);
 }
 .brand:hover .brand-mark { transform: scale(1.06); }
-.brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-.brand-text strong { font-family: var(--font-display); font-size: .95rem; font-weight: 700; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.brand-text strong {
+  font-family: var(--font-display); font-size: .95rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .brand-text small { font-size: .705rem; color: var(--text-3); letter-spacing: .04em; }
 
 .nav-list { display: flex; align-items: center; gap: .15rem; }
@@ -351,7 +356,7 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 
 .hero-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, .85fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(2rem, 5vw, 4rem);
   align-items: center;
 }
@@ -393,15 +398,43 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
   margin-bottom: 1.1rem;
   display: flex; align-items: center;
 }
-.caret {
-  display: inline-block; width: 2px; height: 1.05em;
-  background: var(--brand); margin-left: 3px;
-  animation: blink 1s steps(2) infinite;
+/* hero highlight points — replaces the old lede paragraph */
+.hero-points {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: .9rem;
+  margin-bottom: 1.9rem;
 }
-@keyframes blink { 50% { opacity: 0; } }
-
-.hero-lede { color: var(--text-2); max-width: 58ch; margin-bottom: 1.9rem; }
-.hero-lede strong { color: var(--text); font-weight: 600; }
+.hpoint {
+  position: relative;
+  padding: 1rem 1.05rem 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color var(--t-fast), transform var(--t-fast), background var(--t-fast);
+}
+.hpoint:hover {
+  border-color: var(--border-2);
+  background: var(--surface-2);
+  transform: translateY(-3px);
+}
+.hpoint-num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: .78rem; font-weight: 800; letter-spacing: .12em;
+  color: transparent;
+  background: linear-gradient(120deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text; background-clip: text;
+  margin-bottom: .45rem;
+}
+.hpoint-title {
+  font-size: .98rem; font-weight: 700; line-height: 1.35;
+  margin-bottom: .3rem;
+}
+.hpoint-lead { font-size: .84rem; font-weight: 600; color: var(--text); margin-bottom: .3rem; }
+.hpoint-text { font-size: .82rem; line-height: 1.6; color: var(--text-2); }
 
 .hero-cta { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.7rem; }
 
@@ -413,71 +446,12 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 }
 .hero-links a:hover { color: var(--brand); }
 
-/* profile card */
-.hero-card {
-  position: relative;
-  padding: clamp(1.5rem, 3vw, 2.1rem);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  animation: float 7s ease-in-out infinite;
-}
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-11px); } }
-
-.hero-card-glow {
-  position: absolute; inset: -60% -30% auto -30%; height: 150%;
-  background: radial-gradient(circle at 30% 0%, var(--brand-soft), transparent 62%);
-  pointer-events: none;
-}
-.avatar {
-  position: relative;
-  width: 96px; height: 96px; flex: none;
-  border-radius: 50%;
-  padding: 3px;
-  background: linear-gradient(135deg, var(--brand), var(--brand-2));
-  box-shadow: 0 14px 30px -12px var(--brand);
-  margin-bottom: 1.05rem;
-}
-/* soft rotating halo behind the portrait */
-.avatar::before {
-  content: ""; position: absolute; inset: -6px; z-index: -1;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, var(--brand), var(--brand-2), var(--brand-3), var(--brand));
-  filter: blur(9px); opacity: .5;
-  animation: spin 9s linear infinite;
-}
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.avatar img {
-  width: 100%; height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--bg-2);
-}
-.hero-card-name { font-size: 1.14rem; margin-bottom: .25rem; }
-.hero-card-org { font-size: .845rem; color: var(--text-3); margin-bottom: 1.25rem; }
-
-.mini-facts { display: grid; gap: .6rem; margin-bottom: 1.25rem; }
-.mini-facts > div {
-  display: flex; justify-content: space-between; gap: 1rem;
-  padding-bottom: .6rem;
-  border-bottom: 1px dashed var(--border);
-  font-size: .83rem;
-}
-.mini-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.mini-facts dt { color: var(--text-3); }
-.mini-facts dd { color: var(--text); font-weight: 600; text-align: right; }
-
-.hero-card-tags { display: flex; flex-wrap: wrap; gap: .4rem; }
-
-/* stats */
-.stats {
+/* organisations strip */
+.co-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1px;
   margin-top: clamp(2.8rem, 6vw, 4.5rem);
   border: 1px solid var(--border);
@@ -486,27 +460,54 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
   overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
-.stat {
+.co {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
   background: var(--bg-2);
-  padding: 1.4rem 1.2rem;
+  padding: 1.5rem 1rem 1.45rem;
   text-align: center;
   transition: background var(--t-fast);
 }
-.stat:hover { background: var(--surface-2); }
-.stat-num {
-  display: block;
+.co:hover { background: var(--surface-2); }
+
+/* logo plate — white in both themes so brand colours stay true;
+   shows a monogram until a real logo file is dropped into assets/logos/ */
+.co-mark {
+  display: grid; place-items: center;
+  width: 100%; min-height: 68px;
+  padding: .5rem .7rem;
+  border-radius: var(--r-sm);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08);
+}
+.co-mark::before {
+  content: attr(data-monogram);
+  grid-area: 1 / 1;
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4.5vw, 2.5rem);
-  font-weight: 800;
-  line-height: 1;
-  background: linear-gradient(120deg, var(--brand), var(--brand-2));
+  font-size: 1.45rem; font-weight: 800; letter-spacing: .04em;
+  background: linear-gradient(120deg, #14b8a6, #2563eb);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
 }
-.stat-num em { font-style: normal; }
-.stat-label {
-  display: block; margin-top: .5rem;
-  font-size: .775rem; color: var(--text-3); line-height: 1.45;
+/* Sized in px, not percentages: a centred grid item treats its area as
+   indefinite, so height:100% is ignored and the logo overflows the plate.
+   object-fit does the scaling and centring inside this fixed box. */
+.co-logo {
+  grid-area: 1 / 1;
+  width: 100%; height: 52px;
+  object-fit: contain;
+  object-position: center;
+}
+/* a loaded logo replaces the monogram */
+.co-mark.has-logo::before { content: none; }
+
+.co-name {
+  font-family: var(--font-display);
+  font-size: .875rem; font-weight: 700; line-height: 1.3;
+  color: var(--text);
 }
 
 /* ============ marquee ============ */
@@ -539,26 +540,23 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 
 /* ============ 6. SECTIONS ============ */
 /* --- about --- */
-.about-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, .9fr);
-  gap: clamp(1.6rem, 4vw, 3rem);
-  align-items: start;
-}
-.about-main p { color: var(--text-2); margin-bottom: 1.1rem; }
-.about-main strong { color: var(--text); font-weight: 600; }
+.about-intro { max-width: 74ch; margin-bottom: clamp(2.2rem, 5vw, 3.2rem); }
+.about-intro p { color: var(--text-2); margin-bottom: 1.1rem; }
+.about-intro p:last-child { margin-bottom: 0; }
 
-.about-points { display: grid; gap: .75rem; margin-top: 1.7rem; }
-.about-points li {
-  display: flex; gap: .7rem; align-items: flex-start;
-  font-size: .92rem; color: var(--text-2);
+/* sub-heading above each card group */
+.about-sub {
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  margin-bottom: 1.4rem;
 }
-.about-points .ico {
-  width: 19px; height: 19px; margin-top: .28rem;
-  color: var(--brand); stroke-width: 2.4;
+/* four items per group — four across, so no orphan card on the second row */
+.about-sub + .cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(238px, 100%), 1fr));
+  margin-bottom: clamp(2.4rem, 5vw, 3.4rem);
 }
+.about-sub + .cards:last-child { margin-bottom: 0; }
 
-.about-side, .skills-side { display: grid; gap: 1.1rem; }
+.skills-side { display: grid; gap: 1.1rem; }
 
 .panel {
   padding: 1.35rem 1.4rem;
@@ -577,17 +575,6 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 }
 .panel-title .ico { color: var(--brand); width: 18px; height: 18px; }
 
-.fact-list { display: grid; gap: .55rem; }
-.fact-list > div {
-  display: flex; justify-content: space-between; gap: .9rem;
-  font-size: .835rem;
-  padding-bottom: .55rem;
-  border-bottom: 1px dashed var(--border);
-}
-.fact-list > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.fact-list dt { color: var(--text-3); flex: none; }
-.fact-list dd { color: var(--text); font-weight: 500; text-align: right; }
-
 .tick-list { display: grid; gap: .5rem; }
 .tick-list.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem .9rem; }
 .tick-list li {
@@ -603,7 +590,7 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 /* --- expertise cards --- */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(285px, 100%), 1fr));
   gap: 1.1rem;
 }
 .card {
@@ -636,8 +623,9 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 .card-icon .ico { width: 22px; height: 22px; }
 .card:hover .card-icon { transform: scale(1.08) rotate(-5deg); }
 
-.card h3 { font-size: 1.08rem; margin-bottom: .5rem; }
+.card h3, .card h4 { font-size: 1.08rem; margin-bottom: .5rem; }
 .card > p { font-size: .88rem; color: var(--text-3); margin-bottom: 1rem; }
+.card > p:last-child { margin-bottom: 0; }
 
 .card-list { display: grid; gap: .45rem; }
 .card-list li {
@@ -715,27 +703,8 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
   gap: clamp(1.6rem, 4vw, 3rem);
   align-items: start;
 }
-.skills-meters { display: grid; gap: 1.15rem; }
-.meter-head {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
-  margin-bottom: .45rem;
-  font-size: .87rem;
-}
-.meter-head span { color: var(--text-2); }
-.meter-head b { font-family: var(--font-display); font-size: .82rem; color: var(--brand); }
-.meter-track {
-  height: 8px; border-radius: var(--r-full);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.meter-fill {
-  display: block; height: 100%; width: 0;
-  border-radius: var(--r-full);
-  background: linear-gradient(90deg, var(--brand), var(--brand-2));
-  box-shadow: 0 0 12px -2px var(--brand);
-  transition: width 1.4s cubic-bezier(.16, 1, .3, 1);
-}
+/* services offered, above the contact grid */
+.services { margin-bottom: clamp(2rem, 4.5vw, 3rem); }
 
 /* --- projects --- */
 .projects {
@@ -1026,9 +995,7 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 
 /* ============ 8. RESPONSIVE ============ */
 @media (max-width: 1024px) {
-  .hero-inner { grid-template-columns: 1fr; }
-  .hero-card { max-width: 460px; }
-  .about-grid, .skills-grid, .contact-grid { grid-template-columns: 1fr; }
+  .skills-grid, .contact-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 880px) {
@@ -1057,13 +1024,17 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
   .nav-list a.active { background: var(--brand-soft); border-color: var(--border); color: var(--brand); }
   .nav-list a::after { display: none; }
 
-  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* 5 logos over 3 columns would leave a blank cell — let the last one
+     stretch across the gap so the strip always ends flush */
+  .co-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .co-strip .co:last-child { grid-column: span 2; }
 }
 
 @media (max-width: 620px) {
   :root { --header-h: 64px; }
   .brand-text small { display: none; }
   .hero { background-size: 44px 44px; }
+  .hero-points { grid-template-columns: 1fr; }
   .hero-links { flex-direction: column; gap: .5rem; }
   .hero-cta .btn { flex: 1 1 100%; }
   .timeline { padding-left: 1.7rem; }
@@ -1074,9 +1045,13 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
 }
 
 @media (max-width: 400px) {
-  .stats { grid-template-columns: 1fr; }
-  .mini-facts > div, .fact-list > div { flex-direction: column; gap: .1rem; }
-  .mini-facts dd, .fact-list dd { text-align: left; }
+  .co-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .co-strip .co:last-child { grid-column: span 2; }
+  /* trim the brand so the header still fits a 320px screen */
+  .brand-mark { width: 32px; height: 32px; }
+  .brand { gap: .55rem; }
+  .brand-text strong { font-size: .875rem; }
+  .header-inner { gap: .6rem; }
 }
 
 /* ============ motion & print ============ */
@@ -1089,7 +1064,6 @@ body.nav-open .nav-toggle .ico-shut { opacity: 1; transform: rotate(0); }
     scroll-behavior: auto !important;
   }
   .reveal { opacity: 1; transform: none; }
-  .hero-card { animation: none; }
   .marquee { animation: none; }
 }
 
